@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 
 namespace TerraEconomy.Util
 {
-
-    public static class NPCDict
+    public static class NPCInfo
     {
         public static Dictionary<string, float> NPCMoney = new Dictionary<string, float>()
         {

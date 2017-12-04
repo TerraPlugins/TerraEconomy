@@ -31,19 +31,42 @@ namespace TerraEconomy
         private static string ScriptTemplate =
 @"using System;
 using System.IO;
-using TerraEconomy;
+using System.Data;
+
 using TShockAPI;
 using Newtonsoft.Json;
+using Mono.Data.Sqlite;
+using MySql.Data.MySqlClient;
+
+using TerraEconomy;
+using TerraEconomy.Util;
+
 
 public class MyScript : TeconomyScript
 {
     public override void Initialize()
     {
+        TShockAPI.Hooks.PlayerHooks.PlayerChat += PlayerHooks_PlayerChat;
 
+        TerraEconomy.Hooks.BankHooks.OnTransaction += OnTransaction;
     }
+
     public override void Dispose(bool disposing)
     {
+        if (disposing)
+        {
+            TShockAPI.Hooks.PlayerHooks.PlayerChat -= PlayerHooks_PlayerChat;
+            TerraEconomy.Hooks.BankHooks.OnTransaction -= OnTransaction;
+        }
+    }
 
+    private void PlayerHooks_PlayerChat(TShockAPI.Hooks.PlayerChatEventArgs e)
+    {
+    }
+
+    private void OnTransaction(TSPlayer sender, Transaction t)
+    {
+        // TShock.Log.ConsoleInfo(t.ToString());
     }
 }
 ";
@@ -63,7 +86,6 @@ public class MyScript : TeconomyScript
             LoadConfig();
 
             Directory.CreateDirectory(ScriptsPath);
-            scriptHandler = new ScriptHandler(ScriptsPath);
 
             ServerApi.Hooks.GameInitialize.Register(this, OnInitialize);
             ServerApi.Hooks.GamePostInitialize.Register(this, OnPostInitialize);
@@ -71,6 +93,7 @@ public class MyScript : TeconomyScript
 
             TShockAPI.Hooks.PlayerHooks.PlayerPostLogin += PlayerHooks_PlayerPostLogin;
         }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -96,6 +119,7 @@ public class MyScript : TeconomyScript
 
         private void OnPostInitialize(EventArgs args)
         {
+            scriptHandler = new ScriptHandler(ScriptsPath);
             scriptHandler.CallInit();
         }
 
@@ -130,10 +154,12 @@ public class MyScript : TeconomyScript
                                 TShock.Log.ConsoleInfo("Player {0} killed a npc <{1}>", sender.Name, npc.FullName);
                                 // give money based on the npc
 
-                                if(NPCDict.NPCMoney.ContainsKey(npc.FullName))
+                                if(NPCInfo.NPCMoney.ContainsKey(npc.FullName))
                                 {
-                                    Transaction t = new Transaction(sender.User.ID, -1, NPCDict.NPCMoney[npc.FullName], String.Format("Killed a {0}", npc.FullName));
+                                    Transaction t = new Transaction(sender.User.ID, -1, NPCInfo.NPCMoney[npc.FullName], String.Format("Killed a {0}", npc.FullName));
                                     t.InsertToDB();
+                                    t.IsMobKill = true;
+                                    Hooks.BankHooks.InvokeOnTransaction(sender, t);
                                 }
                                 else
                                     TShock.Log.ConsoleInfo("[TerraEconomy] Unhandled npc dict money! Add it: {0}", npc.FullName);

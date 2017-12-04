@@ -15,6 +15,7 @@ namespace TerraEconomy.Util
         public float Amount { get; set; }
         public string Message { get; set; }
         public DateTime Date { get; set; }
+        public bool IsMobKill { get; set; }
 
         public Transaction(int reciever, int sender, float amount, string message)
         {
@@ -23,6 +24,18 @@ namespace TerraEconomy.Util
             Amount = amount;
             Message = message;
             Date = DateTime.Now;
+        }
+
+        public override string ToString()
+        {
+            return String.Format("{{RecieverID: {0}, SenderID: {1}, Amount: {2}, Message: {3}, Date: {4}, IsMobKill: {5}}}",
+                RecieverID,
+                SenderID,
+                Amount,
+                Message,
+                Date.ToString(),
+                IsMobKill
+                );
         }
 
         public void InsertToDB()
