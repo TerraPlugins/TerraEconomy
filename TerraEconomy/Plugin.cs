@@ -9,9 +9,11 @@ using System.Data;
 using System.IO;
 using Mono.Data.Sqlite;
 using System.Reflection;
+using TerraEconomy.Util;
 
 namespace TerraEconomy
 {
+    [ApiVersion(2, 1)]
     public class TerraEconomy : TerrariaPlugin
     {
         #region Plugin Info
@@ -22,6 +24,29 @@ namespace TerraEconomy
         #endregion
 
         public ConfigFile Config = new ConfigFile();
+        private ScriptHandler scriptHandler;
+
+        string ScriptsPath = Path.Combine(TShock.SavePath, "terra_scripts");
+
+        private static string ScriptTemplate =
+@"using System;
+using System.IO;
+using TerraEconomy;
+using TShockAPI;
+using Newtonsoft.Json;
+
+public class MyScript : TeconomyScript
+{
+    public override void Initialize()
+    {
+
+    }
+    public override void Dispose(bool disposing)
+    {
+
+    }
+}
+";
 
         public TerraEconomy(Main game) : base(game)
         {
@@ -36,16 +61,25 @@ namespace TerraEconomy
         public override void Initialize()
         {
             LoadConfig();
+
+            Directory.CreateDirectory(ScriptsPath);
+            scriptHandler = new ScriptHandler(ScriptsPath);
+
             ServerApi.Hooks.GameInitialize.Register(this, OnInitialize);
             ServerApi.Hooks.GamePostInitialize.Register(this, OnPostInitialize);
-        }
+            ServerApi.Hooks.NetGetData.Register(this, OnData);
 
+            TShockAPI.Hooks.PlayerHooks.PlayerPostLogin += PlayerHooks_PlayerPostLogin;
+        }
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
                 ServerApi.Hooks.GameInitialize.Deregister(this, OnInitialize);
                 ServerApi.Hooks.GamePostInitialize.Deregister(this, OnPostInitialize);
+                ServerApi.Hooks.NetGetData.Deregister(this, OnData);
+
+                TShockAPI.Hooks.PlayerHooks.PlayerPostLogin -= PlayerHooks_PlayerPostLogin;
             }
             base.Dispose(disposing);
         }
@@ -54,22 +88,98 @@ namespace TerraEconomy
         private void OnInitialize(EventArgs args)
         {
             Database.Connect();
-            Commands.ChatCommands.Add(new Command("TerraEconomy.help".ToLower(), CHelp, "chelp")
+            Commands.ChatCommands.Add(new Command("TerraEconomy.admin".ToLower(), CreateScript, "cscript")
             {
-                HelpText = "Usage: /chelp"
+                HelpText = "Usage: /cscript <name>"
             });
         }
 
         private void OnPostInitialize(EventArgs args)
+        {
+            scriptHandler.CallInit();
+        }
+
+        private void OnData(GetDataEventArgs e)
+        {
+            if (e.Handled)
+                return;
+
+            //TShock.Log.ConsoleInfo("Whoiam {0}", a.Msg.whoAmI);
+
+            TSPlayer sender = TShock.Players[e.Msg.whoAmI];
+
+            if (sender == null)
+                return;
+
+            using (var reader = new BinaryReader(new MemoryStream(e.Msg.readBuffer, e.Index, e.Length)))
+            {
+                switch (e.MsgID)
+                {
+                    case PacketTypes.NpcStrike:
+                        {
+                            var npcid = reader.ReadInt16();
+                            var damage = reader.ReadInt16();
+
+                            var npc = Main.npc[npcid];
+
+                            var current_life = npc.life - damage;
+
+                            if (current_life <= 0)
+                            {
+                                // kill
+                                TShock.Log.ConsoleInfo("Player {0} killed a npc <{1}>", sender.Name, npc.FullName);
+                                // give money based on the npc
+
+                                if(NPCDict.NPCMoney.ContainsKey(npc.FullName))
+                                {
+                                    Transaction t = new Transaction(sender.User.ID, -1, NPCDict.NPCMoney[npc.FullName], String.Format("Killed a {0}", npc.FullName));
+                                    t.InsertToDB();
+                                }
+                                else
+                                    TShock.Log.ConsoleInfo("[TerraEconomy] Unhandled npc dict money! Add it: {0}", npc.FullName);
+                            }
+                            break;
+                        }
+                }
+            }
+            
+        }
+
+        private void OnNpcKill(NpcKilledEventArgs args)
+        {
+            TShock.Log.ConsoleInfo("ID: {0}", args.npc.lastInteraction);
+
+            if (args.npc.lastInteraction < 0 || args.npc.lastInteraction > TShock.Players.Length)
+                return;
+            
+            var name = TShock.Players[args.npc.lastInteraction].Name;
+            TShock.Log.ConsoleInfo("Player {0} killed a npc: {1}", name, args.npc.ToString());
+        }
+
+        private void PlayerHooks_PlayerPostLogin(TShockAPI.Hooks.PlayerPostLoginEventArgs e)
         {
 
         }
         #endregion
 
         #region Commands
-        private void CHelp(CommandArgs args)
+        private void CreateScript(CommandArgs args)
         {
-            args.Player.SendInfoMessage("Author, please change me.");
+            if(args.Parameters.Count < 1)
+            {
+                args.Player.SendInfoMessage("[TerraEconomy] You must provide a script name.");
+                return;
+            }
+
+            string source = ScriptTemplate.Replace("MyScript", args.Parameters[0]);
+            var path = Path.Combine(ScriptsPath, args.Parameters[0] + ".cs");
+            if(!File.Exists(path))
+            {
+                File.WriteAllText(path, source);
+                args.Player.SendSuccessMessage("[TerraEconomy] Script created succesfully.");
+                return;
+            }
+            args.Player.SendErrorMessage("[TerraEconomy] A script with that name already exists.");
         }
         #endregion
     }
