@@ -69,7 +69,6 @@
     <Compile Include="Script.cs" />
     <Compile Include="ScriptHandler.cs" />
     <Compile Include="Util\BankAccount.cs" />
-    <Compile Include="Util\NPCDict.cs" />
     <Compile Include="Util\Transaction.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -79,4 +78,8 @@
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
 </Project>

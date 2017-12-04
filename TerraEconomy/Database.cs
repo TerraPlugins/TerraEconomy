@@ -12,7 +12,7 @@ using TerraEconomy.Util;
 
 namespace TerraEconomy
 {
-    public class Database
+    public static class Database
     {
         public static IDbConnection db;
 

@@ -61,7 +61,7 @@ namespace TerraEconomy.Util
             Date = new DateTime(date);
         }
 
-        public static IEnumerable<Transaction> GetTransactionsBySender(string sender, int limit = 100)
+        public static IEnumerable<Transaction> GetTransactionsBySender(int sender, int limit = 100)
         {
             using (var reader = Database.db.QueryReader("SELECT * FROM Transactions WHERE SenderID=@0 ORDER BY Date DESC LIMIT @1",
                     sender, limit))
@@ -73,7 +73,13 @@ namespace TerraEconomy.Util
             }
         }
 
-        public static IEnumerable<Transaction> GetTransactionsByReciever(string reciever, int limit = 100)
+        /// <summary>
+        /// Gets transactions by the receiver id
+        /// </summary>
+        /// <param name="reciever">The TShockAPI.DB.User.ID</param>
+        /// <param name="limit">How many transactions to retrieve</param>
+        /// <returns></returns>
+        public static IEnumerable<Transaction> GetTransactionsByReceiver(int reciever, int limit = 100)
         {
             using (var reader = Database.db.QueryReader("SELECT * FROM Transactions WHERE RecieverID=@0 ORDER BY Date DESC LIMIT @1",
                     reciever, limit))

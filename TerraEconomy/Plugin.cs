@@ -23,7 +23,7 @@ namespace TerraEconomy
         public override Version Version => Assembly.GetExecutingAssembly().GetName().Version;
         #endregion
 
-        public ConfigFile Config = new ConfigFile();
+        public static ConfigFile Config = new ConfigFile();
         private ScriptHandler scriptHandler;
 
         string ScriptsPath = Path.Combine(TShock.SavePath, "terra_scripts");
@@ -156,15 +156,16 @@ public class MyScript : TeconomyScript
                                 TShock.Log.ConsoleInfo("Player {0} killed a npc <{1}>", sender.Name, npc.FullName);
                                 // give money based on the npc
 
-                                if(NPCInfo.NPCMoney.ContainsKey(npc.FullName))
+                                if(Config.NPCMoney.ContainsKey(npc.FullName))
                                 {
-                                    Transaction t = new Transaction(sender.User.ID, -1, NPCInfo.NPCMoney[npc.FullName], String.Format("Killed a {0}", npc.FullName));
+                                    Transaction t = new Transaction(sender.User.ID, -1, Config.NPCMoney[npc.FullName], String.Format("Killed a {0}", npc.FullName));
                                     t.InsertToDB();
                                     t.IsMobKill = true;
                                     Hooks.BankHooks.InvokeOnTransaction(sender, t);
                                 }
-                                else
-                                    TShock.Log.ConsoleInfo("[TerraEconomy] Unhandled npc dict money! Add it: {0}", npc.FullName);
+                                else if(Config.DisableMissingMobWarning)
+                                    TShock.Log.ConsoleInfo("[TerraEconomy] Unhandled/Unknown mob money reward! Add it, the mob name is '{0}'" +
+                                        "\nYou can dissable this warning by setting DisableMissingMobWarning to false.", npc.FullName);
                             }
                             break;
                         }
@@ -186,7 +187,22 @@ public class MyScript : TeconomyScript
 
         private void PlayerHooks_PlayerPostLogin(TShockAPI.Hooks.PlayerPostLoginEventArgs e)
         {
+            BankAccount account;
 
+            if(e.Player.IsLoggedIn)
+            {
+                account = BankAccount.GetByUserID(e.Player.User.ID);
+
+                if (account == null)
+                {
+                    account = new BankAccount(e.Player.User.ID);
+                    account.InsertToDB();
+                    TShock.Log.ConsoleInfo("[TerraEconomy] Created bank account for {0}", e.Player.User.Name);
+                    e.Player.SendMessage("[TerraEconomy] Created a bank account for you, enjoy!", Config.GetColor());
+                }
+                e.Player.SendMessage(String.Format("[TerraEconomy] Your balance is {0}", account.Balance), Config.GetColor());
+                Hooks.BankHooks.InvokeOnBankAccountLogin(e.Player, account);
+            }
         }
         #endregion
 

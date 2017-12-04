@@ -12,6 +12,9 @@ namespace TerraEconomy
     {
         public void InfoLog(string msg) => TShock.Log.ConsoleInfo(msg);
         public void InfoLog(string format, params object[] args) => TShock.Log.ConsoleInfo(format, args);
+        public ConfigFile GetConfig() => TerraEconomy.Config;
+
+        // TODO: Add all necessary functions here
 
         public virtual void Initialize()
         {
@@ -21,6 +24,5 @@ namespace TerraEconomy
         {
 
         }
-        // TODO: Add all necessary functions here
     }
 }
