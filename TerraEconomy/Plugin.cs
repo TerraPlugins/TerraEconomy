@@ -96,6 +96,8 @@ public class MyScript : TeconomyScript
 
         protected override void Dispose(bool disposing)
         {
+            scriptHandler.CallDispose(disposing);
+
             if (disposing)
             {
                 ServerApi.Hooks.GameInitialize.Deregister(this, OnInitialize);

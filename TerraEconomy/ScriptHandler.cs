@@ -54,7 +54,23 @@ namespace TerraEconomy
                 }
                 catch(Exception err)
                 {
-                    TShock.Log.ConsoleError("[TerraEconomy] The script <{0}> has thrown an error: {1}",
+                    TShock.Log.ConsoleError("[TerraEconomy] The script <{0}> has thrown an error when initializing: {1}",
+                        script.Item2, err.Message);
+                }
+            }
+        }
+
+        public void CallDispose(bool disposing)
+        {
+            foreach (var script in CompiledScripts)
+            {
+                try
+                {
+                    script.Item1?.Dispose(disposing);
+                }
+                catch (Exception err)
+                {
+                    TShock.Log.ConsoleError("[TerraEconomy] The script <{0}> has thrown an error when disposing: {1}",
                         script.Item2, err.Message);
                 }
             }
