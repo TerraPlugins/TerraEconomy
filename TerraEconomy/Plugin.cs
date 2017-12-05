@@ -92,6 +92,7 @@ public class MyScript : TeconomyScript
             ServerApi.Hooks.NetGetData.Register(this, OnData);
 
             TShockAPI.Hooks.PlayerHooks.PlayerPostLogin += PlayerHooks_PlayerPostLogin;
+            TShockAPI.Hooks.PlayerHooks.PlayerLogout += PlayerHooks_PlayerLogout;
         }
 
         protected override void Dispose(bool disposing)
@@ -202,6 +203,22 @@ public class MyScript : TeconomyScript
                 }
                 e.Player.SendMessage(String.Format("[TerraEconomy] Your balance is {0}", account.Balance), Config.GetColor());
                 Hooks.BankHooks.InvokeOnBankAccountLogin(e.Player, account);
+            }
+        }
+
+        private void PlayerHooks_PlayerLogout(TShockAPI.Hooks.PlayerLogoutEventArgs e)
+        {
+            BankAccount account;
+            if (e.Player.IsLoggedIn)
+            {
+                account = BankAccount.GetByUserID(e.Player.User.ID);
+
+                if (account == null)
+                {
+                    TShock.Log.ConsoleError("[TerraEconomy] A player ({0}) without a bank account left, how?", e.Player.User.Name);
+                    return;
+                }
+                Hooks.BankHooks.InvokeOnBankAccountLogout(e.Player, account);
             }
         }
         #endregion

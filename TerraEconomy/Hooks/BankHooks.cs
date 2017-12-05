@@ -17,15 +17,20 @@ namespace TerraEconomy.Hooks
         public delegate void BankAccountLogin(TSPlayer sender, BankAccount account);
 
         /// <summary>
-        /// Called when a transaction happens
+        /// Invoked when a transaction happens
         /// </summary>
         public static event TransactionEvent OnTransaction;
         /// <summary>
-        /// Called when the player logs in his bank account (TShock Login).
+        /// Invoked when the player logs in his bank account (TShock Login).
         /// </summary>
-        public static event BankAccountLogin OnBankAccountLogin; // TODO: Finish this event
+        public static event BankAccountLogin OnBankAccountLogin;
+        /// <summary>
+        /// Invoked when the player logs out.
+        /// </summary>
+        public static event BankAccountLogin OnBankAccountLogout;
 
         public static void InvokeOnTransaction(TSPlayer sender, Transaction t) => OnTransaction?.Invoke(sender, t);
         public static void InvokeOnBankAccountLogin(TSPlayer sender, BankAccount account) => OnBankAccountLogin?.Invoke(sender, account);
+        public static void InvokeOnBankAccountLogout(TSPlayer sender, BankAccount account) => OnBankAccountLogout?.Invoke(sender, account);
     }
 }
