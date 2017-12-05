@@ -192,41 +192,5 @@ namespace TerraEconomy.Util
                 t.Get<long>("Date")
                 );
         }
-
-        public static void AddTransaction(Transaction t)
-        {
-            try
-            {
-                DBHelper.Query("INSERT INTO Transactions (Amount, SenderID, RecieverID, Message, Date) VALUES (@0,@1,@2,@3,@4)",
-                    t.Amount,
-                    t.SenderID,
-                    t.RecieverID,
-                    t.Message,
-                    t.Date.Ticks
-                );
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.StackTrace);
-            }
-        }
-
-        public static async void AddTransactionAsync(Transaction t)
-        {
-            try
-            {
-                await DBHelper.QueryAsync("INSERT INTO Transactions (Amount, SenderID, RecieverID, Message, Date) VALUES (@0,@1,@2,@3,@4)",
-                    t.Amount,
-                    t.SenderID,
-                    t.RecieverID,
-                    t.Message,
-                    t.Date.Ticks
-                );
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.StackTrace);
-            }
-        }
     }
 }
