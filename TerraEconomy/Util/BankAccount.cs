@@ -27,11 +27,21 @@ namespace TerraEconomy.Util
                 );
         }
 
+        /// <summary>
+        /// Checks if the BankAccount can pay that amount
+        /// </summary>
+        /// <param name="amount"></param>
+        /// <returns></returns>
+        public bool CanPay(int amount)
+        {
+            return (Balance - amount) >= 0;
+        }
+
         public void InsertToDB()
         {
             try
             {
-                Database.db.Query("INSERT INTO Accounts (UserID, Balance) VALUES (@0,@1)",
+                DBHelper.Query("INSERT INTO Accounts (UserID, Balance) VALUES (@0,@1)",
                     UserID,
                     Balance
                 );
@@ -42,9 +52,67 @@ namespace TerraEconomy.Util
             }
         }
 
+        public async Task InsertToDBasync()
+        {
+            try
+            {
+                await DBHelper.QueryAsync("INSERT INTO Accounts (UserID, Balance) VALUES (@0,@1)",
+                    UserID,
+                    Balance
+                );
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.StackTrace);
+            }
+        }
+
+        public void Update()
+        {
+            try
+            {
+                DBHelper.Query("UPDATE Accounts SET Balance=@0 WHERE UserID=@1",
+                    Balance,
+                    UserID
+                );
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.StackTrace);
+            }
+        }
+
+        public async Task UpdateAsync()
+        {
+            try
+            {
+                await DBHelper.QueryAsync("UPDATE Accounts SET Balance=@0 WHERE UserID=@1",
+                    Balance,
+                    UserID
+                );
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.StackTrace);
+            }
+        }
+
         public static BankAccount GetByUserID(int userid)
         {
-            using (var reader = Database.db.QueryReader("SELECT * FROM Accounts WHERE UserID=@0",
+            using (var reader = DBHelper.QueryResult("SELECT * FROM Accounts WHERE UserID=@0",
+                    userid))
+            {
+                while (reader.Read())
+                {
+                    return new BankAccount(userid, reader.Get<float>("Balance"));
+                }
+            }
+            return null;
+        }
+
+        public static async Task<BankAccount> GetByUserIDAsync(int userid)
+        {
+            using (var reader = await DBHelper.QueryResultAsync("SELECT * FROM Accounts WHERE UserID=@0",
                     userid))
             {
                 while (reader.Read())

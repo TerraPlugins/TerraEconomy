@@ -10,6 +10,9 @@ using System.IO;
 using Mono.Data.Sqlite;
 using System.Reflection;
 using TerraEconomy.Util;
+using TShockAPI.DB;
+using MySql.Data.MySqlClient;
+using System.Threading.Tasks;
 
 namespace TerraEconomy
 {
@@ -34,6 +37,7 @@ using System.IO;
 using System.Data;
 
 using TShockAPI;
+using TShockAPI.DB;
 using Newtonsoft.Json;
 using Mono.Data.Sqlite;
 using MySql.Data.MySqlClient;
@@ -46,8 +50,12 @@ public class MyScript : TeconomyScript
 {
     public override void Initialize()
     {
+        // await DBHelper.CreateTableAsync(new SqlTable(""MyScript_Experience"",
+        //                new SqlColumn(""UserID"", MySqlDbType.Int32) { NotNull = true },
+        //                new SqlColumn(""Level"", MySqlDbType.Int32) { DefaultValue = ""1"" },
+        //                new SqlColumn(""XP"", MySqlDbType.Int64) { DefaultValue = ""0"" }
+        //                ));
         TShockAPI.Hooks.PlayerHooks.PlayerChat += PlayerHooks_PlayerChat;
-
         TerraEconomy.Hooks.BankHooks.OnTransaction += OnTransaction;
     }
 
@@ -111,22 +119,36 @@ public class MyScript : TeconomyScript
         }
 
         #region Hooks
-        private void OnInitialize(EventArgs args)
+        private async void OnInitialize(EventArgs args)
         {
-            Database.Connect();
             Commands.ChatCommands.Add(new Command("TerraEconomy.admin".ToLower(), CreateScript, "cscript")
             {
                 HelpText = "Usage: /cscript <name>"
             });
+            await DBHelper.ConnectAsync();
         }
 
-        private void OnPostInitialize(EventArgs args)
+        private async void OnPostInitialize(EventArgs args)
         {
+            await DBHelper.CreateTableAsync(new SqlTable("Accounts",
+                new SqlColumn("ID", MySqlDbType.Int32) { Primary = true, Unique = true, Length = 7, AutoIncrement = true },
+                new SqlColumn("UserID", MySqlDbType.Int32) { Length = 6 },
+                new SqlColumn("Balance", MySqlDbType.Float) { DefaultValue = "0" }
+                ));
+            await DBHelper.CreateTableAsync(new SqlTable("Transactions",
+                new SqlColumn("Amount", MySqlDbType.Float) { NotNull = true },
+                new SqlColumn("SenderID", MySqlDbType.Int32) { DefaultValue = "-1" }, // -1 = NPC
+                new SqlColumn("RecieverID", MySqlDbType.Int32) { NotNull = true },
+                new SqlColumn("Hash", MySqlDbType.String) { NotNull = true },
+                new SqlColumn("Message", MySqlDbType.String) { Length = 100 },
+                new SqlColumn("Date", MySqlDbType.Int64) { NotNull = true }
+                ));
+
             scriptHandler = new ScriptHandler(ScriptsPath);
             scriptHandler.CallInit();
         }
 
-        private void OnData(GetDataEventArgs e)
+        private async void OnData(GetDataEventArgs e)
         {
             if (e.Handled)
                 return;
@@ -160,11 +182,13 @@ public class MyScript : TeconomyScript
                                 if(Config.NPCMoney.ContainsKey(npc.FullName))
                                 {
                                     Transaction t = new Transaction(sender.User.ID, -1, Config.NPCMoney[npc.FullName], String.Format("Killed a {0}", npc.FullName));
-                                    t.InsertToDB();
                                     t.IsMobKill = true;
+                                    sender.SendMessage(String.Format("[TerraEconomy] Recieved {0} for killing a {1}", 
+                                        Config.NPCMoney[npc.FullName], npc.FullName), Config.GetColor());
+                                    await t.InsertToDBAsync();
                                     Hooks.BankHooks.InvokeOnTransaction(sender, t);
                                 }
-                                else if(Config.DisableMissingMobWarning)
+                                else if(!Config.DisableMissingMobWarning)
                                     TShock.Log.ConsoleInfo("[TerraEconomy] Unhandled/Unknown mob money reward! Add it, the mob name is '{0}'" +
                                         "\nYou can dissable this warning by setting DisableMissingMobWarning to false.", npc.FullName);
                             }
@@ -172,18 +196,6 @@ public class MyScript : TeconomyScript
                         }
                 }
             }
-            
-        }
-
-        private void OnNpcKill(NpcKilledEventArgs args)
-        {
-            TShock.Log.ConsoleInfo("ID: {0}", args.npc.lastInteraction);
-
-            if (args.npc.lastInteraction < 0 || args.npc.lastInteraction > TShock.Players.Length)
-                return;
-            
-            var name = TShock.Players[args.npc.lastInteraction].Name;
-            TShock.Log.ConsoleInfo("Player {0} killed a npc: {1}", name, args.npc.ToString());
         }
 
         private void PlayerHooks_PlayerPostLogin(TShockAPI.Hooks.PlayerPostLoginEventArgs e)

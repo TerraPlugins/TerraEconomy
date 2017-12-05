@@ -62,13 +62,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigFile.cs" />
-    <Compile Include="Database.cs" />
     <Compile Include="Hooks\BankHooks.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Script.cs" />
     <Compile Include="ScriptHandler.cs" />
     <Compile Include="Util\BankAccount.cs" />
+    <Compile Include="Util\DBHelper.cs" />
     <Compile Include="Util\Transaction.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -76,6 +76,9 @@
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="TODO.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -16,10 +16,15 @@ namespace TerraEconomy
         public string ConfigVersion = "1.0.2";
         public bool DisableMissingMobWarning = false;
         public int[] MessageColor = { 51, 0, 102 };
+        public string CurrencySymbol = "€";
         public Dictionary<string, float> NPCMoney = new Dictionary<string, float>()
         {
-            {"Slime", 2},
-            {"Zombie", 5},
+            {"Slime", 10},
+            {"Zombie", 30},
+            {"Bunny", 1},
+            {"Demon Eye", 50},
+            {"Red Squirrel", 2},
+            {"Bird", 2},
         };
         // End of config variables
 
