@@ -24,6 +24,7 @@ namespace TerraEconomy
             TShock.Log.ConsoleInfo("[TerraEconomy] Scripts loaded: {0}", string.Join(", ", Scripts.Select(x => new FileInfo(x).Name.Replace(".cs", ""))));
             CSScript.EvaluatorConfig.Access = EvaluatorAccess.Singleton;
             CSScript.Evaluator.ReferenceAssembly(Assembly.GetExecutingAssembly());
+            CSScript.Evaluator.ReferenceAssemblyByName("System");
             CSScript.Evaluator.ReferenceAssembly(typeof(TShock).Assembly);
             CSScript.Evaluator.ReferenceAssembly(typeof(Mono.Data.Sqlite.SqliteConvert).Assembly);
             CSScript.Evaluator.ReferenceAssembly(typeof(MySql.Data.MySqlClient.MySqlConnection).Assembly);

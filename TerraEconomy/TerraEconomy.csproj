@@ -32,11 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CSScriptLibrary, Version=3.27.2.0, Culture=neutral, PublicKeyToken=70fcc3d18c749033, processorArchitecture=MSIL">
-      <HintPath>..\packages\CS-Script.lib.3.27.2.0\lib\CSScriptLibrary.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.CSharp, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\Mono.CSharp.4.0.0.143\lib\4.5\Mono.CSharp.dll</HintPath>
+    <Reference Include="CSScriptLibrary, Version=3.27.5.0, Culture=neutral, PublicKeyToken=70fcc3d18c749033, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>References\CSScriptLibrary.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Data.Sqlite, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>..\packages\Ryozuki.TShockPlugin.1.0.4\lib\net40\Mono.Data.Sqlite.dll</HintPath>
@@ -78,6 +76,11 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="BUGS.txt" />
+    <Content Include="References\CSScriptLibrary.dll" />
+    <Content Include="References\CSScriptLibrary.xml" />
+    <Content Include="References\Mono.CSharp.dll" />
+    <Content Include="References\Mono.Posix.dll" />
     <Content Include="TODO.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

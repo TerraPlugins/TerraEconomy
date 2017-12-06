@@ -1,0 +1,5 @@
+﻿[TerraEconomy] Scripts loaded: Experience, test
+[TerraEconomy] Error compiling the script <Experience>:
+Could not load file or assembly 'System' or one of its dependencies
+[TerraEconomy] Error compiling the script <test>:
+Could not load file or assembly 'System' or one of its dependencies
